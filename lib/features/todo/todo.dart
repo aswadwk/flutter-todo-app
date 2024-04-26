@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/src/widgets/framework.dart';
 import 'package:flutter/src/widgets/placeholder.dart';
 import 'package:flutter/widgets.dart';
+import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:todo_app/features/todo/models/todo_model.dart';
 import 'package:todo_app/features/todo/todo_service.dart';
 import 'package:todo_app/widgets/input_widget.dart';
 import 'package:todo_app/widgets/label_widget.dart';
+import 'package:todo_app/widgets/loading_widget.dart';
 import 'package:todo_app/widgets/shimmer_widget.dart';
 
 class TodoPage extends StatefulWidget {
@@ -59,6 +61,11 @@ class _TodoPageState extends State<TodoPage> {
                       },
                       suffixIcon: GestureDetector(
                           onTap: () {
+                            SmartDialog.showLoading(
+                              animationType: SmartAnimationType.scale,
+                              builder: (context) => const LoadingWidget(),
+                            );
+
                             if (_isUpdate) {
                               editTodos = TodoService.editTodos(
                                 _idTodoController.text,
@@ -67,6 +74,7 @@ class _TodoPageState extends State<TodoPage> {
                               );
 
                               editTodos.then((value) => {
+                                    SmartDialog.dismiss(),
                                     if (value)
                                       {
                                         setState(() {
@@ -87,6 +95,7 @@ class _TodoPageState extends State<TodoPage> {
                               );
 
                               addTodos.then((value) => {
+                                    SmartDialog.dismiss(),
                                     if (value)
                                       {
                                         setState(() {
@@ -191,10 +200,17 @@ class _TodoPageState extends State<TodoPage> {
                                     ),
                                     IconButton(
                                       onPressed: () {
+                                        SmartDialog.showLoading(
+                                          animationType:
+                                              SmartAnimationType.scale,
+                                          builder: (context) =>
+                                              const LoadingWidget(),
+                                        );
                                         deleteTodos = TodoService.deleteTodos(
                                             todos[index].id.toString());
 
                                         deleteTodos.then((value) => {
+                                              SmartDialog.dismiss(),
                                               if (value)
                                                 {
                                                   if (_isUpdate &&
