@@ -64,6 +64,61 @@ class _TodoPageState extends State<TodoPage> {
                   ],
                 ),
               ),
+              const SizedBox(height: 20),
+              // listTask(),
+              Container(
+                height: MediaQuery.of(context).size.height * 0.7,
+                child: ListView.builder(
+                  itemCount: 105,
+                  itemBuilder: (context, index) {
+                    return Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Container(
+                        height: 50,
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          color: Colors.grey,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Row(
+                          children: [
+                            const SizedBox(width: 10),
+                            const Icon(
+                              Icons.check_circle,
+                              color: Colors.green,
+                            ),
+                            const SizedBox(width: 10),
+                            Text(
+                              'Task $index',
+                              style: GoogleFonts.poppins(
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            // action edit and delete
+                            const Spacer(),
+                            IconButton(
+                              onPressed: () {},
+                              icon: const Icon(
+                                Icons.edit,
+                                color: Colors.white,
+                              ),
+                            ),
+                            IconButton(
+                              onPressed: () {},
+                              icon: const Icon(
+                                Icons.delete,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
             ],
           ),
         ),
