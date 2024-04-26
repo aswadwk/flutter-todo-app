@@ -3,6 +3,9 @@ import 'package:flutter/src/widgets/framework.dart';
 import 'package:flutter/src/widgets/placeholder.dart';
 import 'package:flutter/widgets.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shimmer/shimmer.dart';
+import 'package:todo_app/features/todo/models/todo_model.dart';
+import 'package:todo_app/features/todo/todo_service.dart';
 import 'package:todo_app/widgets/input_widget.dart';
 import 'package:todo_app/widgets/label_widget.dart';
 import 'package:todo_app/widgets/shimmer_widget.dart';
@@ -15,8 +18,15 @@ class TodoPage extends StatefulWidget {
 }
 
 class _TodoPageState extends State<TodoPage> {
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
+  late Future<List<Todo>> todosFuture = TodoService.getTodos();
+  late Future<bool> deleteTodos;
+  late Future<bool> editTodos;
+  late Future<bool> addTodos;
+
+  final TextEditingController _newTodoController = TextEditingController();
+  final TextEditingController _idTodoController = TextEditingController();
+
+  bool _isUpdate = false;
 
   @override
   Widget build(BuildContext context) {
@@ -38,7 +48,7 @@ class _TodoPageState extends State<TodoPage> {
                       textColor: Colors.white,
                       cursorColor: Colors.white,
                       hintText: 'Task baru',
-                      controller: _passwordController,
+                      controller: _newTodoController,
                       // isObscureText: !_isShowPassword,
                       validate: (value) {
                         // if (value.isEmpty) {
@@ -48,17 +58,56 @@ class _TodoPageState extends State<TodoPage> {
                         return null;
                       },
                       suffixIcon: GestureDetector(
-                        onTap: () {
-                          // setState(() {
-                          //   _isShowPassword = !_isShowPassword;
-                          // });
-                        },
-                        child: const Icon(
-                          Icons.add,
-                          color: Colors.grey,
-                          size: 25,
-                        ),
-                      ),
+                          onTap: () {
+                            if (_isUpdate) {
+                              editTodos = TodoService.editTodos(
+                                _idTodoController.text,
+                                _newTodoController.text,
+                                null,
+                              );
+
+                              editTodos.then((value) => {
+                                    if (value)
+                                      {
+                                        setState(() {
+                                          _isUpdate = false;
+                                          _newTodoController.text = '';
+                                          _idTodoController.text = '';
+                                        }),
+                                        // get data
+                                        setState(() {
+                                          todosFuture = TodoService.getTodos();
+                                        })
+                                      }
+                                  });
+                            } else {
+                              addTodos = TodoService.addTodos(
+                                _newTodoController.text,
+                                null,
+                              );
+
+                              addTodos.then((value) => {
+                                    if (value)
+                                      {
+                                        setState(() {
+                                          _newTodoController.text = '';
+                                        }),
+                                        // get data
+                                        setState(() {
+                                          todosFuture = TodoService.getTodos();
+                                        })
+                                      }
+                                  });
+                            }
+                          },
+                          child: Container(
+                            color: Colors.green, // Set your desired color here
+                            child: Icon(
+                              _isUpdate ? Icons.check : Icons.add,
+                              color: Colors.white,
+                              size: 35,
+                            ),
+                          )),
                     ),
                     const SizedBox(height: 8),
                   ],
@@ -66,55 +115,155 @@ class _TodoPageState extends State<TodoPage> {
               ),
               const SizedBox(height: 20),
               // listTask(),
-              Container(
+              SizedBox(
                 height: MediaQuery.of(context).size.height * 0.7,
-                child: ListView.builder(
-                  itemCount: 105,
-                  itemBuilder: (context, index) {
-                    return Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Container(
-                        height: 50,
-                        width: double.infinity,
-                        decoration: BoxDecoration(
-                          color: Colors.grey,
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Row(
-                          children: [
-                            const SizedBox(width: 10),
-                            const Icon(
-                              Icons.check_circle,
-                              color: Colors.green,
+                child: FutureBuilder(
+                  future: todosFuture,
+                  builder: (context, snapshot) {
+                    if (snapshot.hasData) {
+                      List<Todo> todos = snapshot.data as List<Todo>;
+
+                      return ListView.builder(
+                        itemCount: todos.length,
+                        itemBuilder: (context, index) {
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
                             ),
-                            const SizedBox(width: 10),
-                            Text(
-                              'Task $index',
-                              style: GoogleFonts.poppins(
-                                color: Colors.white,
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
+                            child: Container(
+                              height: 60,
+                              width: double.infinity,
+                              decoration: BoxDecoration(
+                                color: Colors.grey,
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Padding(
+                                padding:
+                                    const EdgeInsets.only(top: 8, bottom: 4),
+                                child: Row(
+                                  children: [
+                                    const SizedBox(width: 10),
+                                    const Icon(
+                                      Icons.check_circle,
+                                      color: Colors.green,
+                                    ),
+                                    const SizedBox(width: 10),
+                                    Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          todos[index].todo.toString(),
+                                          style: GoogleFonts.poppins(
+                                            color: Colors.white,
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                        Text(
+                                          todos[index].createdAt.toString(),
+                                          style: GoogleFonts.poppins(
+                                            color: Colors.white,
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    // action edit and delete
+                                    const Spacer(),
+                                    IconButton(
+                                      onPressed: () {
+                                        setState(() {
+                                          _newTodoController.text =
+                                              todos[index].todo.toString();
+                                          _idTodoController.text =
+                                              todos[index].id.toString();
+
+                                          _isUpdate = true;
+                                        });
+                                      },
+                                      icon: const Icon(
+                                        Icons.edit,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                    IconButton(
+                                      onPressed: () {
+                                        deleteTodos = TodoService.deleteTodos(
+                                            todos[index].id.toString());
+
+                                        deleteTodos.then((value) => {
+                                              if (value)
+                                                {
+                                                  if (_isUpdate &&
+                                                      _idTodoController.text ==
+                                                          todos[index]
+                                                              .id
+                                                              .toString())
+                                                    {
+                                                      setState(() {
+                                                        _isUpdate = false;
+                                                        _newTodoController
+                                                            .text = '';
+                                                        _idTodoController.text =
+                                                            '';
+                                                      })
+                                                    },
+                                                  // get data
+                                                  setState(() {
+                                                    todosFuture =
+                                                        TodoService.getTodos();
+                                                  })
+                                                }
+                                            });
+                                      },
+                                      icon: const Icon(
+                                        Icons.delete,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
-                            // action edit and delete
-                            const Spacer(),
-                            IconButton(
-                              onPressed: () {},
-                              icon: const Icon(
-                                Icons.edit,
-                                color: Colors.white,
+                          );
+                        },
+                      );
+                    } else if (snapshot.hasError) {
+                      return Center(
+                        child: Text(snapshot.error.toString()),
+                      );
+                    }
+
+                    return ListView.builder(
+                      itemCount: 5,
+                      itemBuilder: (context, index) {
+                        return Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Shimmer.fromColors(
+                              baseColor: Colors.white,
+                              highlightColor: Colors.grey,
+                              child: Container(
+                                height: 50,
+                                width: double.infinity,
+                                decoration: BoxDecoration(
+                                  color: Colors.grey,
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Row(
+                                  children: const [
+                                    SizedBox(width: 10),
+                                    Icon(
+                                      Icons.check_circle,
+                                      color: Colors.green,
+                                    )
+                                  ],
+                                ),
                               ),
-                            ),
-                            IconButton(
-                              onPressed: () {},
-                              icon: const Icon(
-                                Icons.delete,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
+                            ));
+                      },
                     );
                   },
                 ),

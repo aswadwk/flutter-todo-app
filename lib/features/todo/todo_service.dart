@@ -2,156 +2,78 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
+import 'package:todo_app/features/todo/models/todo_model.dart';
 
 class TodoService {
-  // static Future<TermsAndCondition> termsAndConditions() async {
-  //   var response =
-  //       await http.get(Uri.parse('${baseUrl}app/terms-and-conditions'));
+  static Future<List<Todo>> getTodos() async {
+    var response = await http.get(
+      Uri.parse('https://65e584e9d7f0758a76e6917f.mockapi.io/api/v1/posts'),
+    );
 
-  //   if (response.statusCode == 200) {
-  //     return TermsAndCondition.fromJson(
-  //         jsonDecode(response.body)['data']['terms_and_conditions']);
-  //   }
+    if (response.statusCode == 200) {
+      List<dynamic> data = jsonDecode(response.body);
 
-  //   if (response.statusCode == 400 ||
-  //       response.statusCode == 403 ||
-  //       response.statusCode == 401) {
-  //     return TermsAndCondition.fromJson(jsonDecode(response.body));
-  //   }
+      List<Todo> todos = data.map((e) => Todo.fromJson(e)).toList();
 
-  //   return TermsAndCondition.fromJson(jsonDecode(response.body));
-  // }
+      return todos;
+    }
 
-  // Future<String> getAccessToken() async {
-  //   SharedPreferences preferences = await SharedPreferences.getInstance();
-  //   token = preferences.getString("access_token").toString();
-  //   return token;
-  // }
+    if (response.statusCode == 400 ||
+        response.statusCode == 403 ||
+        response.statusCode == 401) {
+      return [];
+    }
 
-  // static Future<ServerResponse> signUp(
-  //     {required String fullName,
-  //     required String email,
-  //     required String phoneNumber,
-  //     required String password,
-  //     required String confirmPassword}) async {
-  //   var response = await http.post(Uri.parse('${baseUrl}auth/register'), body: {
-  //     'full_name': fullName,
-  //     'mobile_phone': phoneNumber,
-  //     'email': email,
-  //     'password': password,
-  //     'confirmed_password': confirmPassword,
-  //   });
+    return [];
+  }
 
-  //   print(jsonDecode(response.body));
+  static Future<bool> deleteTodos(String id) async {
+    var response = await http.delete(
+      Uri.parse('https://65e584e9d7f0758a76e6917f.mockapi.io/api/v1/posts/$id'),
+    );
 
-  //   if (response.statusCode == 200) {
-  //     return ServerResponse.fromJson(jsonDecode(response.body));
-  //   }
+    if (response.statusCode == 200) {
+      return true;
+    }
 
-  //   if (response.statusCode == 400 ||
-  //       response.statusCode == 403 ||
-  //       response.statusCode == 401) {
-  //     return ServerResponse.fromJson(jsonDecode(response.body));
-  //   }
+    return false;
+  }
 
-  //   return ServerResponse.fromJson(jsonDecode(response.body));
-  // }
+  // edit
+  static Future<bool> editTodos(
+    String id,
+    String todo,
+    String? description,
+  ) async {
+    var response = await http.put(
+      Uri.parse('https://65e584e9d7f0758a76e6917f.mockapi.io/api/v1/posts/$id'),
+      body: {
+        'todo': todo,
+        'description': description ?? '',
+      },
+    );
 
-  // Future<SignIn> signIn(
-  //     {required String email, required String password}) async {
-  //   var response = await http.post(Uri.parse('${baseUrl}auth/login'), body: {
-  //     'email': email,
-  //     'password': password,
-  //   });
+    if (response.statusCode == 200) {
+      return true;
+    }
 
-  //   print(jsonDecode(response.statusCode.toString()));
-  //   print(jsonDecode(response.body));
+    return false;
+  }
 
-  //   if (response.statusCode == 200) {
-  //     return SignIn.fromJson(jsonDecode(response.body));
-  //   }
+  // add
+  static Future<bool> addTodos(String todo, String? description) async {
+    var response = await http.post(
+      Uri.parse('https://65e584e9d7f0758a76e6917f.mockapi.io/api/v1/posts'),
+      body: {
+        'todo': todo,
+        'description': description ?? '',
+      },
+    );
 
-  //   if (response.statusCode == 400 ||
-  //       response.statusCode == 404 ||
-  //       response.statusCode == 403 ||
-  //       response.statusCode == 401) {
-  //     return SignIn.fromJson(jsonDecode(response.body));
-  //   }
+    if (response.statusCode == 201) {
+      return true;
+    }
 
-  //   throw Exception('Failed to load data.');
-  // }
-
-  // static Future<ServerResponse> requestForgotPassword({
-  //   required String email,
-  // }) async {
-  //   var response =
-  //       await http.post(Uri.parse('${baseUrl}auth/send-reset-password'), body: {
-  //     'email': email,
-  //   });
-
-  //   print(jsonDecode(response.body));
-
-  //   if (response.statusCode == 200) {
-  //     return ServerResponse.fromJson(jsonDecode(response.body));
-  //   }
-
-  //   if (response.statusCode == 400 ||
-  //       response.statusCode == 403 ||
-  //       response.statusCode == 401) {
-  //     return ServerResponse.fromJson(jsonDecode(response.body));
-  //   }
-
-  //   return ServerResponse.fromJson(jsonDecode(response.body));
-  // }
-
-  // static Future<ServerResponse> forgotPasswordConfirm({
-  //   required String email,
-  //   required String password,
-  //   required String confirmPassword,
-  //   required String code,
-  // }) async {
-  //   var response = await http.post(
-  //     Uri.parse('${baseUrl}auth/reset-password'),
-  //     body: {
-  //       'email': email,
-  //       'password': password,
-  //       'password_confirmation': confirmPassword,
-  //       'code': code,
-  //     },
-  //   );
-
-  //   print(jsonDecode(response.body));
-
-  //   if (response.statusCode == 200) {
-  //     return ServerResponse.fromJson(jsonDecode(response.body));
-  //   }
-
-  //   if (response.statusCode == 400 ||
-  //       response.statusCode == 403 ||
-  //       response.statusCode == 401) {
-  //     return ServerResponse.fromJson(jsonDecode(response.body));
-  //   }
-
-  //   return ServerResponse.fromJson(jsonDecode(response.body));
-  // }
-
-  // static Future<PrivacyPolicy> privacyPolices() async {
-  //   var response = await http.get(
-  //     Uri.parse('${baseUrl}app/privacy-policy'),
-  //   );
-
-  //   if (response.statusCode == 200) {
-  //     return PrivacyPolicy.fromJson(
-  //       jsonDecode(response.body)['data']['privacy_policy'],
-  //     );
-  //   }
-
-  //   if (response.statusCode == 400 ||
-  //       response.statusCode == 403 ||
-  //       response.statusCode == 401) {
-  //     return PrivacyPolicy.fromJson(jsonDecode(response.body));
-  //   }
-
-  //   return PrivacyPolicy.fromJson(jsonDecode(response.body));
-  // }
+    return false;
+  }
 }
