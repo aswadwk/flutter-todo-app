@@ -71,6 +71,11 @@ class _LoginPageState extends State<LoginPage> {
                             'Silahkan Login',
                             style: Theme.of(context).textTheme.headlineLarge,
                           ),
+                          const SizedBox(height: 10),
+                          Text(
+                            'Email dan kata sandi hanya perlu di isi',
+                            style: Theme.of(context).textTheme.bodyMedium,
+                          ),
                           const SizedBox(height: 30),
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,

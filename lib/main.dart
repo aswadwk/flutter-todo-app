@@ -13,8 +13,8 @@ class MainApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      // home: const LoginPage(),
-      home: const TodoPage(),
+      home: const LoginPage(),
+      // home: const TodoPage(),
       navigatorObservers: [FlutterSmartDialog.observer],
       builder: FlutterSmartDialog.init(),
     );
